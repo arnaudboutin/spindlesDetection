@@ -1,4 +1,4 @@
-function [Data, Info, SS] = CoRe_swa_FindSSChannels(Data, Info, SS)
+function [Data, Info, SS] = ld_swa_FindSSChannels(Data, Info, SS)
 % Automatic spindle detection on all channels after initial spindles have 
 % been detected in a reference channel 
 

@@ -1,4 +1,4 @@
-function o_SS = CoRe_addSleepStage2spindles( i_SS, i_Infos , i_verb)
+function o_SS = ld_addSleepStage2spindles( i_SS, i_Infos , i_verb)
 % 
 % function SS_filtered = filter_spindles( i_SS, i_Infos )
 % 

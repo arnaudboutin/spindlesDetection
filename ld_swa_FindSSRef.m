@@ -1,4 +1,4 @@
-function [Data, Info, SS, SS_Core] = CoRe_swa_FindSSRef(Data, Info)
+function [Data, Info, SS, SS_Core] = ld_swa_FindSSRef(Data, Info)
 % Automatic spindle detection on a reference channel using continuous 
 % wavelet transform
 

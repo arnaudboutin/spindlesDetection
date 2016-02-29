@@ -1,4 +1,4 @@
-function CoRe_exportSpindlesAndScoring2vmrk()
+function ld_exportSpindlesAndScoring2vmrk()
 % 
 % function exportSpindles2vmrk()
 % 

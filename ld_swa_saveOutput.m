@@ -1,4 +1,4 @@
-function swa_saveOutput(Data, Info, SW, save_name, flag_raw, flag_filtered)
+function ld_swa_saveOutput(Data, Info, SW, save_name, flag_raw, flag_filtered)
 % function to save the wave detection output
 
 % TODO: make generalisable to the different wave types since it is

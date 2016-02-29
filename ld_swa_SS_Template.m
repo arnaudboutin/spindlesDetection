@@ -23,9 +23,9 @@
 % end
 
 % Load EEG file
-maindir = 'E:\Documents\Research Arnaud\CRIUGM\Sleep & Reconsolidation\BrainVision\MatlabCode_Spindles';
+maindir = '/media/borear/Projects/olfacto_spindles_detection/EEG_dat';
 cd(maindir)
-addpath('C:\Users\labdoyon01\Documents\MATLAB\eeglab13_5_4b');
+% addpath('C:\Users\labdoyon01\Documents\MATLAB\eeglab13_5_4b');
 
 % savepath([maindir, filesep, 'pathdef.m']);
 
@@ -85,13 +85,15 @@ Data.SSRef = Data.Raw;
 % Data.SSRef(3,:) = Data.Raw(chanIndex(3),:);
 
 % find the spindles in the reference
-[Data, Info, SS, SS_Core] = CoRe_swa_FindSSRef(Data, Info);
+[Data, Info, SS, SS_Core] = ld_swa_FindSSRef(Data, Info);
 
 % find the waves in all channels
 %[Data, Info, SS] = swa_FindSSChannels(Data, Info, SS);
 
+SS_Core = ld_removeSpindlesDuringBadMarkers(SS_Core);
+
 % Filter spindles depending on stage scoring
-SS = CoRe_addSleepStage2spindles(SS_Core, Info);
+SS = ld_addSleepStage2spindles(SS_Core, Info);
 
 % save the data
 swa_saveOutput(Data, Info, SS, [], 0, 0)
