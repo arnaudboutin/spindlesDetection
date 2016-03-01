@@ -23,7 +23,7 @@
 % end
 
 % Load EEG file
-maindir = '/media/borear/Projects/olfacto_spindles_detection/EEG_dat';
+maindir = '/media/borear/Projects/olfacto_spindles_detection/eeg_files_export';
 cd(maindir)
 % addpath('C:\Users\labdoyon01\Documents\MATLAB\eeglab13_5_4b');
 
@@ -85,15 +85,15 @@ Data.SSRef = Data.Raw;
 % Data.SSRef(3,:) = Data.Raw(chanIndex(3),:);
 
 % find the spindles in the reference
-[Data, Info, SS, SS_Core] = ld_swa_FindSSRef(Data, Info);
+[Data, Info, ~, SS_Core] = ld_swa_FindSSRef(Data, Info);
 
 % find the waves in all channels
 %[Data, Info, SS] = swa_FindSSChannels(Data, Info, SS);
 
-SS_Core = ld_removeSpindlesDuringBadMarkers(SS_Core);
+SS_Core = ld_removeSpindlesDuringBadMarkers(SS_Core, Info);
 
 % Filter spindles depending on stage scoring
-SS = ld_addSleepStage2spindles(SS_Core, Info);
+SS = ld_addSleepStage2spindles(SS_Core, Info, 0);
 
 % save the data
 swa_saveOutput(Data, Info, SS, [], 0, 0)

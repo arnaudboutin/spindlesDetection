@@ -1,4 +1,4 @@
-function [ o_SS ] = ld_removeSpindlesDuringBadMarkers( i_SS, i_markers)
+function [ o_SS ] = ld_removeSpindlesDuringBadMarkers( i_SS, i_Info, i_markers)
 %
 %   [ o_SS ] = ld_removeSpindlesDuringBadMarkers( i_SS, i_markers)
 %
@@ -18,7 +18,7 @@ function [ o_SS ] = ld_removeSpindlesDuringBadMarkers( i_SS, i_markers)
 %       - Creation and debug
 % 
 
-if nargin < 2
+if nargin < 3
     % Load marker file
     [FileName,PathName] = uigetfile('*.Markers','Select marker file');
     markerFile = fopen([PathName, FileName],'r');
@@ -36,7 +36,7 @@ markersBI = markersBI{1,1}(3:end,1); % remove header
 markersBI = regexp(markersBI,', ','split'); % split cells
 markersBI = vertcat(markersBI{:}); % Convert cell n*1*5 into cell n*5
 
-colHeadings = {'error','type','start','stop','channel'}; % Structure
+colHeadings = {'error','type','start','length','channel'}; % Structure
 structMarkersBI = cell2struct(markersBI, colHeadings, 2); % Conversion
 
 clear markers colHeadings
@@ -45,7 +45,7 @@ clear markers colHeadings
 InfoMarkersBI = [str2double({structMarkersBI.start}'), ...
     str2double({structMarkersBI.start}')+ str2double({structMarkersBI.length}')];
 
-numElec = length(Info.Electrodes);
+numElec = length(i_Info.Electrodes);
 numSp = length(i_SS);
 
 
@@ -70,7 +70,7 @@ for iSp = 1:length(i_SS) % Loop on spindles
     indMarker = find(in_out>0,1); % Empty if no Bad Interval
     
     try % Find wrong channel in Bad Interval if specific channel
-        curChannel = strcmp({Info.Electrodes.labels}, structMarkersBI(indMarker).channel);
+        curChannel = strcmp({i_Info.Electrodes.labels}, structMarkersBI(indMarker).channel);
     catch
         continue
     end
@@ -83,13 +83,13 @@ for iSp = 1:length(i_SS) % Loop on spindles
     end
 end
 
-disp(['Number of spindles before BadInterval removal: ' num2str(length(SS))])
+disp(['Number of spindles before BadInterval removal: ' num2str(length(i_SS))])
 
 for rSp=length(removeSp):-1:1
     i_SS(rSp) = [];
 end
 
-disp(['Number of spindles after BadInterval removal: ' num2str(length(SS))])
+disp(['Number of spindles after BadInterval removal: ' num2str(length(i_SS))])
 
 o_SS = i_SS;
 
