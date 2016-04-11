@@ -1,4 +1,8 @@
-function ld_exportSpindlesAndScoring2vmrk()
+function ld_exportSpindlesAndScoring2vmrk(i_extractSpindleFile, ...
+                                          i_scoringFile, ...
+                                          i_selectedStageScoring, ...
+                                          i_selectedElectrodes, ...
+                                          o_vmrkFileName)
 % 
 % function exportSpindles2vmrk()
 % 
@@ -16,12 +20,16 @@ if nargin < 1
     % Load spindle file
     [FileName,PathName] = uigetfile('*.mat','Select extraction spindles file');
     extractSpindles = load([PathName,FileName]);
+else
+    extractSpindles = load(i_extractSpindleFile);
 end
 
 if nargin < 2
     % Load Scoring file
     [FileName,PathName] = uigetfile('*.mat','Select scoring file');
     scoring = load([PathName,FileName]);
+else
+    scoring = load(i_scoringFile);
 end
 
 % Get frequency acquisition
@@ -50,26 +58,30 @@ for nSl=1:length(scoring.D.other.CRC.score{1,1}) % Loop sleep scoring
     Marker = [Marker newmark];
 end
 
-% Get unique sleep stages
-stageScoring = unique(scoring.D.other.CRC.score{1,1}); 
+if nargin < 3
+    % Get unique sleep stages
+    stageScoring = unique(scoring.D.other.CRC.score{1,1}); 
 
-if any(isnan(stageScoring(:)))
-    stageScoring(isnan(stageScoring))=[];
-    stageScoring(end+1) = 7;
-end
+    if any(isnan(stageScoring(:)))
+        stageScoring(isnan(stageScoring))=[];
+        stageScoring(end+1) = 7;
+    end
 
-stageScoring2Select = cell(size(stageScoring));
+    stageScoring2Select = cell(size(stageScoring));
 
-for i=stageScoring
-    stageScoring2Select{i+1} = stageScoringName{i+1};
-end
+    for i=stageScoring
+        stageScoring2Select{i+1} = stageScoringName{i+1};
+    end
 
-% Remove stage scoring not used (empty)
-stageScoring2Select = stageScoring2Select(~cellfun('isempty',stageScoring2Select));
+    % Remove stage scoring not used (empty)
+    stageScoring2Select = stageScoring2Select(~cellfun('isempty',stageScoring2Select));
 
-[selectedStageScoring,~] = listdlg('PromptString','Select Stage scoring:',...
+    [selectedStageScoring,~] = listdlg('PromptString','Select Stage scoring:',...
                     'SelectionMode','multiple',...
                     'ListString',stageScoring2Select);
+else
+    selectedStageScoring = i_selectedStageScoring;
+end
 
 selectedStageScoringName = cell(1,size(selectedStageScoring,2));
 
@@ -86,16 +98,25 @@ selectedStageScoring = selectedStageScoring-1;
 disp(['Sleep stages selected: ',selectedStageScoringName]);
 
 
-[s,~] = listdlg('PromptString','Select electrodes:',...
+if nargin < 4
+    [selectedElectrodes,~] = listdlg('PromptString','Select electrodes:',...
                     'SelectionMode','multiple',...
                     'ListString',{extractSpindles.Info.Electrodes.labels});
-
-selectedElectrodes = cell(1,size(s,2));                
-
-for i=s
-    selectedElectrodes{i} = extractSpindles.Info.Electrodes(i).labels;
+else
+    if strcmp(char(i_selectedElectrodes),'All') % If all electrodes
+        selectedElectrodes = 1:length(extractSpindles.Info.Electrodes);
+    else % Specific electrodes
+        selectedElectrodes = i_selectedElectrodes;
+    end
 end
-disp(['Electrodes selected: ',selectedElectrodes]);
+
+selectedElectrodesNames = cell(1,size(selectedElectrodes,2));
+
+for i=selectedElectrodes
+    selectedElectrodesNames{i} = extractSpindles.Info.Electrodes(i).labels;
+end
+
+disp(['Electrodes selected: ',selectedElectrodesNames]);
 
 isRed = 0;
 
@@ -105,7 +126,7 @@ for nSp=1:length(extractSpindles.SS)  % Loop spindles
     else
         isRed = 1;
     end
-    for nRef=s
+    for nRef=selectedElectrodes % Electrodes selected
         currentStageScoring = isempty(find(extractSpindles.SS(nSp).scoring(nRef)==selectedStageScoring, 1));
         notAlone = nnz(extractSpindles.SS(nSp).Ref_Region)>1;
         if extractSpindles.SS(nSp).Ref_Region(nRef)~=0 && ~currentStageScoring && notAlone && isRed
@@ -138,25 +159,32 @@ for nSp=1:length(extractSpindles.SS)  % Loop spindles
     end
 end
 
-% Get original EEG file
-[EEG_FileName,PathName] = uigetfile('*','Select EEG file');
-vhdrFilename = [PathName,EEG_FileName(1:end-3),'vmrk'];
-
-if exist(vhdrFilename,'file')
-    fid = fopen(vhdrFilename ,'a');
+% Get VMRK EEG file
+if nargin < 5 
+    [vmrk_FileName,PathName] = uigetfile('*.vmrk','Select EEG file');
+    vmrkFileName = [PathName,vmrk_FileName];
 else
-    fid = fopen(vhdrFilename ,'w');
+    vmrkFileName = o_vmrkFileName;
+end
+
+if exist(vmrkFileName,'file')
+    fid = fopen(vmrkFileName ,'a');
+else
+    fid = fopen(vmrkFileName ,'w');
     fprintf(fid,'%s\n\n','Brain Vision Data Exchange Marker File, Version 2.0'...
         ,'; Data created from history path:'...
         ,'; The channel numbers are related to the channels in the exported file.');
 
     fprintf(fid,'%s\n','[Common Infos]', ...
-               'Codepage=UTF-8');        
+               'Codepage=UTF-8');
+    
+    datFileName = strsplit(vmrkFileName,filesep);
+    datFileName = datFileName(end);
+    datFileName = [datFileName(1:end-4) 'dat'];
+    fprintf(fid,'%s\n\n',['DataFile=',datFileName]);
+
 end
-
-
-
-    fprintf(fid,'%s\n\n',['DataFile=',EEG_FileName]);
+   
 
     fprintf(fid,'%s\n','[Marker Infos]'...
 ,'; Each entry: Mk<Marker number>=<Type>,<Description>,<Position in data points>,'...
@@ -167,5 +195,5 @@ end
     for i = 1:length(Marker)
         fprintf(fid,'%s\n',['Mk' num2str(i) '=' Marker(i).type ',' Marker(i).description ',' num2str(Marker(i).position) ',' num2str(Marker(i).size) ',' num2str(Marker(i).channels)]);
     end
-end
+
 
