@@ -17,6 +17,10 @@ function [ o_SS ] = ld_removeSpindlesDuringBadMarkers( i_SS, i_Info, i_markers)
 % 29 Fev 2016: 
 %       - Creation and debug
 % 
+% 2 Mars 2016
+%       - ~isempty(i_SS(iSp).Ref_Region(curChannel))) was ...
+%       - i_SS(iSp).Ref_Region(curChannel)>0)
+% 
 
 if nargin < 3
     % Load marker file
@@ -63,21 +67,26 @@ removeSp = [];
 
 
 for iSp = 1:length(i_SS) % Loop on spindles
-    
+%     disp(['iSp: ' num2str(iSp)]);
     in_out = (InfoSp(iSp,2)    - InfoMarkersBI(:,1)) ./ ... %BI1 bf Sp2 
              (InfoMarkersBI(:,2) - InfoSp(iSp,1));  %Sp2 after BI1
     
     indMarker = find(in_out>0,1); % Empty if no Bad Interval
-    
+    if iSp == 794
+        test = 1;
+    end
     try % Find wrong channel in Bad Interval if specific channel
         curChannel = strcmp({i_Info.Electrodes.labels}, structMarkersBI(indMarker).channel);
+%         disp(['CurChannel: ' num2str(curChannel)]);
     catch
         continue
     end
     
+    
+    
     if ~isempty(indMarker) && strcmp(structMarkersBI(indMarker).error,'Bad Interval') ...
             && (strcmp(structMarkersBI(indMarker).channel,'All') ...
-            || i_SS(iSp).Ref_Region(curChannel)>0) 
+            || ~isempty(i_SS(iSp).Ref_Region(curChannel))) 
         
         removeSp(end+1) = iSp; %#ok<AGROW>
     end
