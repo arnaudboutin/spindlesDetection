@@ -1,4 +1,4 @@
-function o_SS = ld_addSleepStage2spindles( i_SS, i_Infos , i_verb)
+function o_SS = ld_addSleepStage2spindles( i_SS, i_Infos , i_ScoringFile, i_verb)
 % 
 % function SS_filtered = filter_spindles( i_SS, i_Infos )
 % 
@@ -15,14 +15,17 @@ function o_SS = ld_addSleepStage2spindles( i_SS, i_Infos , i_verb)
 % Arnaud Bore: 26 Septembre 2015
 %       Rename filter_spindles to addSleepStage2spindles
 % 
-if nargin < 3 
+if nargin < 4 
     i_verb = 1;
 end
 
 % Load marker file
-[FileName,PathName] = uigetfile('*.mat','Select marker file');
-markers = load([PathName,FileName]);
-
+if nargin < 3
+    [FileName,PathName] = uigetfile('*.mat','Select marker file');
+    markers = load([PathName,FileName]);
+else
+    markers = load(i_ScoringFile);
+end
 % Acquisition time EEG (seconds)
 eegLength = i_Infos.Recording.dataDim(2)/i_Infos.Recording.sRate;
 
