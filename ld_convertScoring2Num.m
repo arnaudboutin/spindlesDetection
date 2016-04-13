@@ -13,8 +13,14 @@ for iSc=1:length(o_SleepStageScoring)
             o_SleepStageScoring(iSc) = 2;
         case 'NREM3'
             o_SleepStageScoring(iSc) = 3;
+        case 'NREM4'
+            o_SleepStageScoring(iSc) = 4;
+        case 'REM'
+            o_SleepStageScoring(iSc) = 5;            
         case 'movement'
             o_SleepStageScoring(iSc) = 6;
+        case 'unscored'
+            o_SleepStageScoring(iSc) = 8;            
     end
 end
 
