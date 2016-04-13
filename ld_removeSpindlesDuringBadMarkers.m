@@ -21,29 +21,57 @@ function [ o_SS ] = ld_removeSpindlesDuringBadMarkers( i_SS, i_Info, i_markers)
 %       - ~isempty(i_SS(iSp).Ref_Region(curChannel))) was ...
 %       - i_SS(iSp).Ref_Region(curChannel)>0)
 % 
-
 if nargin < 3
     % Load marker file
     [FileName,PathName] = uigetfile('*.Markers','Select marker file');
     markerFile = fopen([PathName, FileName],'r');
 else
-    markerFile = fopen(i_markers,'r');
+    [~, ~, ext] = fileparts(i_markers);
+    if strcmp(ext,'.Markers')
+        markerFile = fopen(i_markers,'r');
+        
+        % Markers Bad Interval
+        markersBI = textscan(markerFile,'%s','Delimiter','\n'); % Read File
+        fclose(markerFile); % Close file
+
+        markersBI = markersBI{1,1}(3:end,1); % remove header
+
+        markersBI = regexp(markersBI,', ','split'); % split cells
+        markersBI = vertcat(markersBI{:}); % Convert cell n*1*5 into cell n*5
+
+        clear markers colHeadings
+        
+    elseif strcmp(ext,'.mat')
+        markers = load(i_markers);
+        markers = markers.Bad_Interval;
+        error = {markers.type}';
+        type = {markers.description}';
+        start = {markers.position}';
+        length = {markers.length}';
+        channelNumber = [markers.channelNumber];
+        if any(channelNumber~=0)
+            disp('@TODO convert number to electrode names')
+            return
+        else
+            channel=cell(size(error));
+            channel(:) = {'All'};
+        end
+        markersBI = vertcat(error, ...
+                            type, ...
+                            start, ...
+                            length, ...
+                            channel);
+        markersBI = reshape(markersBI,size(error,1),5);
+        clear error type start length channel markers
+    else
+        disp('Wrong BadMinMax file, format files allowed .Markers and .mat');
+        return
+    end
 end
 
 
-% Markers Bad Interval
-markersBI = textscan(markerFile,'%s','Delimiter','\n'); % Read File
-fclose(markerFile); % Close file
-
-markersBI = markersBI{1,1}(3:end,1); % remove header
-
-markersBI = regexp(markersBI,', ','split'); % split cells
-markersBI = vertcat(markersBI{:}); % Convert cell n*1*5 into cell n*5
-
 colHeadings = {'error','type','start','length','channel'}; % Structure
 structMarkersBI = cell2struct(markersBI, colHeadings, 2); % Conversion
-
-clear markers colHeadings
 
 % Get Info start, stop
 InfoMarkersBI = [str2double({structMarkersBI.start}'), ...
